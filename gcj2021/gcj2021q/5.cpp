@@ -20,13 +20,14 @@ void solve(int gcj_case_id) {
   VI idsD(nQ);
   times(nQ, i) idsD[i] = i;
 
-  VI correctCounts(nQ);
-  times(nP, h) times(nQ, i) correctCounts[i] += A[h][i] - '0';
-  sort(iter(idsD), [&](int i, int j) { return correctCounts[i] > correctCounts[j]; });
+  {
+    VI correctCounts(nQ);
+    times(nP, h) times(nQ, i) correctCounts[i] += A[h][i] - '0';
+    sort(iter(idsD), [&](int i, int j) { return correctCounts[i] > correctCounts[j]; });
+  }
 
   vector<LD> dls(nQ);
-  // times(nQ, i) dls[idsD[i]] = 6.0 * i / nQ - 3.0;
-  times(nQ, i) dls[i] = 6.0 * correctCounts[i] / nQ - 3.0;
+  times(nQ, i) dls[idsD[i]] = 6.0 * i / nQ - 3.0;
   // dd dls;
 
   LD pMin = numeric_limits<LD>::max();
@@ -35,12 +36,8 @@ void solve(int gcj_case_id) {
     LD p = 0; // numeric_limits<LD>::max() - numeric_limits<LD>::min();
     LD sl = 6.0 * count(iter(A[h]), '1') / nQ - 3.0;
     times(nQ, i) {
-      LD x = sl - dls[i];
-      LD wrongRateLog = -log(1 + exp(+x));
-      LD correctRateLog = wrongRateLog + x;
-      p += A[h][i] == '1' ? correctRateLog : wrongRateLog;
-      // LD correctRate = 1 / (1 + exp(-x));
-      // p += log(A[h][i] == '1' ? correctRate : 1 - correctRate);
+      LD correctRate = 1 / (1 + exp(dls[i] - sl));
+      p += log(A[h][i] == '1' ? correctRate : 1 - correctRate);
       // if(correctRate >= 0.5) {
       //   if(A[h][i] == '0') p *= (1 - correctRate) / correctRate;
       // } else {
