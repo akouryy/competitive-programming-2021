@@ -1,0 +1,10 @@
+---
+virtual: false
+gcj: false
+problems:
+- status: AC
+- status: AC (1)
+- status: AC (3)
+- status: WA
+- status: null
+- status: null
