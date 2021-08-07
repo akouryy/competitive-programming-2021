@@ -1,4 +1,4 @@
-/// 19913902 pts
+/// 20050122 pts
 
 
 /*
@@ -126,7 +126,7 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
                 after_a  = ret[(x + 1)        % nRet];
             int middle = Cflat[isecs[a]] - '0';
             candidates.PB({
-              dists[before_a][after_a] - (dists[before_a][a] + middle + dists[a][after_a]),
+              dists[before_a][after_a] - (dists[before_a][a] + dists[a][after_a]),
               x,
               1
             });
@@ -151,7 +151,7 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
                   middle_b = Cflat[isecs[b]] - '0';
               candidates.PB({
                 dists[before_a][after_b] -
-                (dists[before_a][a] + middle_a + dists[a][b] + middle_b + dists[b][after_b]),
+                (dists[before_a][a] + dists[a][b] + dists[b][after_b]),
                 x,
                 2
               });
@@ -166,7 +166,7 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
         x_rm = get<1>(candidates[0]),
         a_rm = ret[x_rm],
         ren  = get<2>(candidates[0]);
-    if(cost == 0) break;
+    // if(cost == 0) break;
     isUsing[a_rm] = false;
     if(ren == 2) { isUsing[ret[x_rm + 1]] = false; }
     auto it = find(iter(ret), a_rm);
