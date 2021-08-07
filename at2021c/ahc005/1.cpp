@@ -108,21 +108,24 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
   VI ret = cycle;
   int nIsecs = size(isecs);
   int nCycle = size(cycle);
-  VB removed(nIsecs);
+  VB used(nIsecs);
+  for(int a : cycle) used[a] = true;
+
   times(nCycle - 2, o) {
     VPII candidates;
     times(nCycle, x) {
       int a = cycle[x];
-      if(isecs[a] != S && !removed[a]) {
+      if(isecs[a] != S && used[a]) {
         int nh = 0, nv = 0;
-        for(int b : can_see_hori[a]) nh += !removed[b];
-        for(int b : can_see_virt[a]) nv += !removed[b];
+        for(int b : can_see_hori[a]) nh += used[b];
+        for(int b : can_see_virt[a]) nv += used[b];
         if(nh >= 2 && nv >= 2) {
           int xx = distance(ret.begin(), find(iter(ret), a));
           int before_a = ret[(xx + size(ret) - 1) % size(ret)],
               after_a  = ret[(xx + 1)             % size(ret)];
+          int middle = Cflat[isecs[a]] - '0';
           candidates.PB({
-            dists[before_a][after_a] - (dists[before_a][a] + dists[a][after_a]),
+            dists[before_a][after_a] - (dists[before_a][a] + middle + dists[a][after_a]),
             x
           });
         }
@@ -132,7 +135,7 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
     sort(iter(candidates));
     int x_rm = candidates[0].second, //rand() % size(candidates)],
         a_rm = cycle[x_rm];
-    removed[a_rm] = true;
+    used[a_rm] = false;
     ret.erase(find(iter(ret), a_rm));
   }
   return ret;
@@ -202,9 +205,32 @@ string cycle_to_ans(VI cycle) {
 void calc_ans() {
   VI cycle = farthest_insertion();
   dd size(cycle);
-  cycle = remove_unnecessary_isecs_locally(cycle);
+  times(4, o) {
+    cycle = remove_unnecessary_isecs_locally(cycle);
+    dd cycle;
+
+    VI next_cycle = { cycle[0] };
+    int nCycle = size(cycle);
+    VB used(size(isecs));
+    used[cycle[0]] = true;
+
+    times(nCycle, x) {
+      int a = cycle[x], b = cycle[(x + 1) % nCycle],
+          c = a;
+      do {
+        int d = dist_nexts[c][b];
+        if(!used[d]) {
+          next_cycle.PB(d);
+          used[d] = true;
+        }
+        c = d;
+      } while (b != c);
+    }
+    // dd next_cycle;
+    cycle = move(next_cycle);
+  }
   dd size(cycle);
-  dd cycle;
+  // dd cycle;
   ans = cycle_to_ans(cycle);
 }
 
