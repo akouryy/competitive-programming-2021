@@ -117,7 +117,7 @@ CX MInt<1000000009>OP"" _m1e9_9(ULL n){RT MInt<1000000009>(n);}
 using unit = tuple<>;using LD=long double;TL<TN T>using vec=vector<T>;
 TL<TN T>using vvec=vec<vec<T>>;TL<TN T>using vvvec=vec<vvec<T>>;TL<TN T>using vvvvec=vec<vvvec<T>>;
 TL<TN T>using pq_gt=priority_queue<T,vec<T>,greater<T>>;
-using VS=vec<string>;using VI=vec<int>;using HII=map<int, int>;using VZI=vec<set<int>>;using WI=vvec<int>;using VB=vec<bool>;using VPII=vec<pair<int, int>>;
+using VS=vec<string>;using VI=vec<int>;using HII=map<int, int>;using VZI=vec<set<int>>;using WI=vvec<int>;using VB=vec<bool>;using VTIII=vec<tuple<int, int, int>>;
 #line 1 "alias.hpp"//1b
 #define EB emplace_back
 #define PB push_back
@@ -260,35 +260,69 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
   VI ret = cycle;
   int nIsecs = size(isecs);
   int nCycle = size(cycle);
-  VB used(nIsecs);
-  for(int a : cycle) used[a] = true;
+  VB isUsing(nIsecs);
+  for(int a : cycle) isUsing[a] = true;
 
   times(nCycle - 2, o) {
-    VPII candidates;
-    times(nCycle, x) {
-      int a = cycle[x];
-      if(isecs[a] != S && used[a]) {
-        int nh = 0, nv = 0;
-        for(int b : can_see_hori[a]) nh += used[b];
-        for(int b : can_see_virt[a]) nv += used[b];
-        if(nh >= 2 && nv >= 2) {
-          int xx = distance(ret.begin(), find(iter(ret), a));
-          int before_a = ret[(xx + size(ret) - 1) % size(ret)],
-              after_a  = ret[(xx + 1)             % size(ret)];
-          int middle = Cflat[isecs[a]] - '0';
-          candidates.PB({
-            dists[before_a][after_a] - (dists[before_a][a] + middle + dists[a][after_a]),
-            x
-          });
+    VTIII candidates; // (改善量, 開始添字, 連続点数)
+    int nRet = size(ret);
+    times(nRet, x) {
+      int a = ret[x];
+      if(isecs[a] != S) {
+        { // 1
+          int nh = 0, nv = 0;
+          for(int b : can_see_hori[a]) nh += isUsing[b];
+          for(int b : can_see_virt[a]) nv += isUsing[b];
+          if(nh >= 2 && nv >= 2) {
+            int before_a = ret[(x + nRet - 1) % nRet],
+                after_a  = ret[(x + 1)        % nRet];
+            int middle = Cflat[isecs[a]] - '0';
+            candidates.PB({
+              dists[before_a][after_a] - (dists[before_a][a] + middle + dists[a][after_a]),
+              x,
+              1
+            });
+          }
+        }
+        // 2
+        if(x < nRet-1) {
+          int b = ret[x + 1];
+          if(isecs[b] != S && (can_see_hori[a].count(b) || can_see_virt[a].count(b))) {
+            int nah = 0, nav = 0, nbh = 0, nbv = 0;
+            for(int c : can_see_hori[a]) nah += isUsing[c];
+            for(int c : can_see_virt[a]) nav += isUsing[c];
+            for(int c : can_see_hori[b]) nbh += isUsing[c];
+            for(int c : can_see_virt[b]) nbv += isUsing[c];
+            if(
+              nah >= 2 && nav >= 2 && nbh >= 2 && nbv >= 2 &&
+              (can_see_hori[a].count(b) ? nah : nav) >= 3
+            ) {
+              int before_a = ret[(x + nRet - 1) % nRet],
+                  after_b  = ret[(x + 2)        % nRet];
+              int middle_a = Cflat[isecs[a]] - '0',
+                  middle_b = Cflat[isecs[b]] - '0';
+              candidates.PB({
+                dists[before_a][after_b] -
+                (dists[before_a][a] + middle_a + dists[a][b] + middle_b + dists[b][after_b]),
+                x,
+                2
+              });
+            }
+          }
         }
       }
     }
     if(candidates.empty()) break;
     sort(iter(candidates));
-    int x_rm = candidates[0].second, //rand() % size(candidates)],
-        a_rm = cycle[x_rm];
-    used[a_rm] = false;
-    ret.erase(find(iter(ret), a_rm));
+    int cost = get<0>(candidates[0]),
+        x_rm = get<1>(candidates[0]),
+        a_rm = ret[x_rm],
+        ren  = get<2>(candidates[0]);
+    if(cost == 0) break;
+    isUsing[a_rm] = false;
+    if(ren == 2) { isUsing[ret[x_rm + 1]] = false; }
+    auto it = find(iter(ret), a_rm);
+    ret.erase(it, it + ren);
   }
   return ret;
 }
@@ -357,7 +391,7 @@ string cycle_to_ans(VI cycle) {
 void calc_ans() {
   VI cycle = farthest_insertion();
   {if(debug)cerr<<"size(cycle): "<<(size(cycle))ln;}
-  times(4, o) {
+  times(5, o) {
     cycle = remove_unnecessary_isecs_locally(cycle);
     {if(debug)cerr<<"cycle: "<<(cycle)ln;}
     VI next_cycle = { cycle[0] };
