@@ -1,4 +1,4 @@
-/// 12209116pts
+/// 16842765 pts
 
 
 /*
@@ -117,7 +117,7 @@ CX MInt<1000000009>OP"" _m1e9_9(ULL n){RT MInt<1000000009>(n);}
 using unit = tuple<>;using LD=long double;TL<TN T>using vec=vector<T>;
 TL<TN T>using vvec=vec<vec<T>>;TL<TN T>using vvvec=vec<vvec<T>>;TL<TN T>using vvvvec=vec<vvvec<T>>;
 TL<TN T>using pq_gt=priority_queue<T,vec<T>,greater<T>>;
-using VS=vec<string>;using VI=vec<int>;using HII=map<int, int>;using VZI=vec<set<int>>;using WI=vvec<int>;using VB=vec<bool>;
+using VS=vec<string>;using VI=vec<int>;using HII=map<int, int>;using VZI=vec<set<int>>;using WI=vvec<int>;using VB=vec<bool>;using VPII=vec<pair<int, int>>;
 #line 1 "alias.hpp"//1b
 #define EB emplace_back
 #define PB push_back
@@ -261,8 +261,8 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
   int nIsecs = size(isecs);
   int nCycle = size(cycle);
   VB removed(nIsecs);
-  times(nCycle, o) {
-    VI candidates;
+  times(nCycle - 2, o) {
+    VPII candidates;
     times(nCycle, x) {
       int a = cycle[x];
       if(isecs[a] != S && !removed[a]) {
@@ -270,12 +270,19 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
         for(int b : can_see_hori[a]) nh += !removed[b];
         for(int b : can_see_virt[a]) nv += !removed[b];
         if(nh >= 2 && nv >= 2) {
-          candidates.PB(x);
+          int xx = distance(ret.begin(), find(iter(ret), a));
+          int before_a = ret[(xx + size(ret) - 1) % size(ret)],
+              after_a  = ret[(xx + 1)             % size(ret)];
+          candidates.PB({
+            dists[before_a][after_a] - (dists[before_a][a] + dists[a][after_a]),
+            x
+          });
         }
       }
     }
     if(candidates.empty()) break;
-    int x_rm = candidates[rand() % size(candidates)],
+    sort(iter(candidates));
+    int x_rm = candidates[0].second, //rand() % size(candidates)],
         a_rm = cycle[x_rm];
     removed[a_rm] = true;
     ret.erase(find(iter(ret), a_rm));

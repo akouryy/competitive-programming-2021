@@ -1,4 +1,4 @@
-/// 16842765 pts
+/// 18687046 pts
 
 
 /*
@@ -109,8 +109,8 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
   int nIsecs = size(isecs);
   int nCycle = size(cycle);
   VB removed(nIsecs);
-  times(nCycle, o) {
-    VI candidates;
+  times(nCycle - 2, o) {
+    VPII candidates;
     times(nCycle, x) {
       int a = cycle[x];
       if(isecs[a] != S && !removed[a]) {
@@ -118,12 +118,19 @@ VI remove_unnecessary_isecs_locally(const VI& cycle) {
         for(int b : can_see_hori[a]) nh += !removed[b];
         for(int b : can_see_virt[a]) nv += !removed[b];
         if(nh >= 2 && nv >= 2) {
-          candidates.PB(x);
+          int xx = distance(ret.begin(), find(iter(ret), a));
+          int before_a = ret[(xx + size(ret) - 1) % size(ret)],
+              after_a  = ret[(xx + 1)             % size(ret)];
+          candidates.PB({
+            dists[before_a][after_a] - (dists[before_a][a] + dists[a][after_a]),
+            x
+          });
         }
       }
     }
     if(candidates.empty()) break;
-    int x_rm = candidates[rand() % size(candidates)],
+    sort(iter(candidates));
+    int x_rm = candidates[0].second, //rand() % size(candidates)],
         a_rm = cycle[x_rm];
     removed[a_rm] = true;
     ret.erase(find(iter(ret), a_rm));
